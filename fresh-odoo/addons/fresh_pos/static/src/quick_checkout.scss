@@ -1,0 +1,21 @@
+.fresh-quick-pay {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    direction: ltr;
+    .fresh-tender {
+        min-height: 72px;
+        padding: 10px 4px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #fff;
+        background: #234b70;
+        border: 2px solid #234b70;
+        white-space: normal;
+        &:hover { background: #173650; }
+        &:focus-visible { outline: 3px solid #e6a700; outline-offset: 2px; }
+        &.fresh-cash { background: #17664d; border-color: #17664d; }
+        &:disabled { opacity: .5; }
+    }
+}
+.fresh-detailed-payment { min-height: 44px; }

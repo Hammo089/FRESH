@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fresh_pos.QuickCheckout" t-inherit="point_of_sale.ActionpadWidget" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('validation')]" position="replace">
+            <div class="fresh-checkout" t-if="showFastPaymentMethods">
+                <div class="fresh-quick-pay" role="group" aria-label="Quick payment">
+                    <button t-foreach="this.pos.config.fast_payment_method_ids.slice().sort((a, b) => a.sequence - b.sequence)"
+                        t-as="method" t-key="method.id"
+                        class="btn btn-lg fresh-tender"
+                        t-att-class="{'fresh-cash': method.is_cash_count}"
+                        t-att-disabled="this.pos.freshQuickPaymentBusy or currentOrder?.state !== 'draft'"
+                        t-on-click="() => props.fastValidate(method)">
+                        <span t-esc="method.name"/>
+                    </button>
+                </div>
+                <button class="btn btn-secondary w-100 mt-2 fresh-detailed-payment"
+                    t-att-disabled="this.pos.freshQuickPaymentBusy"
+                    t-on-click="props.actionToTrigger">دفعة مختلطة / باقي — More payment options</button>
+            </div>
+            <button t-else="" class="pay pay-order-button btn btn-primary btn-lg py-3"
+                t-on-click="props.actionToTrigger" t-out="props.actionName"/>
+        </xpath>
+    </t>
+</templates>

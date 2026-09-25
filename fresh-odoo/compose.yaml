@@ -1,0 +1,42 @@
+name: fresh-odoo-trial
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U odoo -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  odoo:
+    image: odoo:19.0-20260908
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18069:8069"
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
+      - ./addons:/mnt/extra-addons:ro
+    restart: unless-stopped
+volumes:
+  db_data:
+  odoo_data:
+secrets:
+  db_password:
+    file: ./secrets/db_password

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="fresh_pos.ReferenceRegister" t-inherit="point_of_sale.ProductScreen" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('product-screen')]" position="attributes">
+            <attribute name="t-if">this.pos.isSmallProductScreen</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('product-screen')]" position="before">
+            <div t-if="!this.pos.isSmallProductScreen" class="fresh-register">
+                <section class="fresh-sale-column" aria-label="Sales items">
+                    <div class="fresh-register-title"><strong>FRESH</strong><span>المبيعات / Sales</span><span t-esc="pos.config.name"/></div>
+                    <OrderSummary/>
+                    <div class="fresh-sale-status"><span>الأصناف / Items: <b t-esc="items"/></span><span>الصنف المحدد: <t t-esc="currentOrder?.getSelectedOrderline()?.getFullProductName() || '—'"/></span></div>
+                    <div class="fresh-catalog">
+                        <CategorySelector/>
+                        <div class="fresh-item-buttons">
+                            <t t-foreach="pos.productToDisplayByCateg" t-as="group" t-key="group[0]">
+                                <button t-foreach="group[1]" t-as="product" t-key="product.id" class="btn fresh-item-button" t-on-click="() => this.addProductToOrder(product)"><span t-esc="product.name"/></button>
+                            </t>
+                            <span t-if="!pos.productToDisplayByCateg.length" class="p-3">ما في أصناف بهالقسم / No items</span>
+                        </div>
+                    </div>
+                    <div class="fresh-bottom-tools"><ControlButtons onClickMore.bind="displayAllControlPopup"/></div>
+                </section>
+                <aside class="fresh-cash-column" aria-label="Cashier keypad and checkout">
+                    <label class="fresh-barcode-label" for="fresh-barcode">باركود / Barcode</label>
+                    <input id="fresh-barcode" class="fresh-barcode" type="text" inputmode="numeric" autocomplete="off" placeholder="امسح أو أدخل الباركود" t-on-keydown="freshScan"/>
+                    <Numpad class="'fresh-keypad'" buttons="freshKeypadButtons" onClick.bind="freshKeypadClick"/>
+                    <div class="fresh-edit-buttons">
+                        <button class="btn" t-att-class="{'active': pos.numpadMode === 'quantity'}" t-on-click="() => this.onNumpadClick('quantity')">الكمية / Qty</button>
+                        <button class="btn" t-att-disabled="!pos.cashierHasPriceControlRights() || pos.cashier._role === 'minimal'" t-att-class="{'active': pos.numpadMode === 'price'}" t-on-click="() => this.onNumpadClick('price')">السعر / Price</button>
+                        <button class="btn" t-on-click="() => this.onNumpadClick('Backspace')">مسح / ⌫</button>
+                    </div>
+                    <div class="fresh-amount-panel"><span>الإجمالي / Total</span><strong t-esc="total"/></div>
+                    <div class="fresh-print-tools">
+                        <button class="btn" t-att-aria-pressed="pos.config.iface_print_auto ? 'true' : 'false'" t-on-click="freshTogglePrint"><i class="fa fa-print"/> <t t-if="pos.config.iface_print_auto">الطباعة مفعّلة / Print on</t><t t-else="">الطباعة متوقفة / Print off</t></button>
+                    </div>
+                    <ActionpadWidget partner="currentOrder?.getPartner()" actionName.translate="Payment" actionToTrigger="() => pos.pay()" showActionButton="!currentOrder?.isEmpty()" fastValidate="(method) => this.fastValidate(method)"/>
+                    <div t-if="currentOrder?.isEmpty()" class="fresh-empty-payment">أضف صنف لبدء البيع<br/>Add an item to start</div>
+                </aside>
+            </div>
+        </xpath>
+    </t>
+    <t t-name="fresh_pos.ReferenceTable" t-inherit="point_of_sale.OrderSummary" t-inherit-mode="extension">
+        <xpath expr="//OrderDisplay" position="attributes"><attribute name="t-if">this.pos.isSmallProductScreen</attribute></xpath>
+        <xpath expr="//OrderDisplay" position="before">
+            <div t-if="!this.pos.isSmallProductScreen" class="fresh-sale-table-wrap">
+                <table class="fresh-sale-table">
+                    <colgroup><col class="fresh-code-col"/><col/><col class="fresh-qty-col"/><col class="fresh-unit-col"/><col class="fresh-discount-col"/><col class="fresh-total-col"/></colgroup>
+                    <thead><tr><th>باركود<br/>Item #</th><th>الصنف<br/>Description</th><th>الكمية<br/>Qty</th><th>السعر<br/>Unit price</th><th>خصم<br/>%</th><th>المجموع<br/>Total</th></tr></thead>
+                    <tbody>
+                        <tr t-foreach="currentOrder?.lines || []" t-as="line" t-key="line.uuid" tabindex="0" t-att-class="{'fresh-selected': line.isSelected()}" t-on-click="(ev) => this.clickLine(ev, line)" t-on-keydown="(ev) => ev.key === 'Enter' ? this.clickLine(ev, line) : null">
+                            <td t-esc="line.product_id.barcode || line.product_id.default_code || '—'"/>
+                            <td class="fresh-description"><span t-esc="line.getFullProductName()"/><small t-if="line.customer_note" t-esc="line.customer_note"/></td>
+                            <td t-esc="line.qty"/><td t-esc="line.currencyDisplayPriceUnit"/><td t-esc="line.discount || '—'"/><td class="fresh-line-total" t-esc="line.currencyDisplayPrice"/>
+                        </tr>
+                    </tbody>
+                </table>
+                <div t-if="currentOrder?.isEmpty()" class="fresh-empty-table">امسح باركود أو اختَر صنف من تحت<br/><small>Scan a barcode or select an item below</small></div>
+            </div>
+        </xpath>
+    </t>
+</templates>
